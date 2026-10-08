@@ -1,52 +1,55 @@
 import { useState } from 'react'
+import { Navigate, Route, Routes } from 'react-router'
 import { ChatScreen } from './components/ChatScreen'
 import { LoginScreen } from './components/LoginScreen'
 import { NewChatScreen } from './components/NewChatScreen'
 import type { GreenApiCredentials } from './api/greenApi.types'
 import { clearCredentials, loadCredentials, saveCredentials } from './storage'
 
-type Screen =
-  | { name: 'login' }
-  | { name: 'newChat'; credentials: GreenApiCredentials }
-  | { name: 'chat'; credentials: GreenApiCredentials; phone: string }
-
-function initialScreen(): Screen {
-  const credentials = loadCredentials()
-  return credentials ? { name: 'newChat', credentials } : { name: 'login' }
-}
-
 function App() {
-  const [screen, setScreen] = useState<Screen>(initialScreen)
+  const [credentials, setCredentials] = useState<GreenApiCredentials | null>(loadCredentials)
 
-  if (screen.name === 'login') {
-    return (
-      <LoginScreen
-        onLoggedIn={(credentials) => {
-          saveCredentials(credentials)
-          setScreen({ name: 'newChat', credentials })
-        }}
-      />
-    )
+  function handleLoggedIn(creds: GreenApiCredentials) {
+    saveCredentials(creds)
+    setCredentials(creds)
   }
 
-  if (screen.name === 'newChat') {
-    return (
-      <NewChatScreen
-        onStartChat={(phone) => setScreen({ name: 'chat', credentials: screen.credentials, phone })}
-        onChangeAccount={() => {
-          clearCredentials()
-          setScreen({ name: 'login' })
-        }}
-      />
-    )
+  function handleChangeAccount() {
+    clearCredentials()
+    setCredentials(null)
   }
 
   return (
-    <ChatScreen
-      credentials={screen.credentials}
-      phone={screen.phone}
-      onBack={() => setScreen({ name: 'newChat', credentials: screen.credentials })}
-    />
+    <Routes>
+      <Route path="/" element={<Navigate to={credentials ? '/new-chat' : '/login'} replace />} />
+      <Route
+        path="/login"
+        element={
+          credentials ? (
+            <Navigate to="/new-chat" replace />
+          ) : (
+            <LoginScreen onLoggedIn={handleLoggedIn} />
+          )
+        }
+      />
+      <Route
+        path="/new-chat"
+        element={
+          credentials ? (
+            <NewChatScreen onChangeAccount={handleChangeAccount} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/chat/:phone"
+        element={
+          credentials ? <ChatScreen credentials={credentials} /> : <Navigate to="/login" replace />
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 

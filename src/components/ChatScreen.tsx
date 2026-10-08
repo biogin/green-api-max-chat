@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Navigate, useNavigate, useParams } from 'react-router'
 import { useChatSession } from '../hooks/useChatSession'
 import type { GreenApiCredentials } from '../api/greenApi.types'
 import { MessageBubble } from './MessageBubble'
@@ -7,18 +8,26 @@ import './ChatScreen.css'
 
 interface ChatScreenProps {
   credentials: GreenApiCredentials
-  phone: string
-  onBack: () => void
 }
 
-export function ChatScreen({ credentials, phone, onBack }: ChatScreenProps) {
-  const { messages, connectionError, sendText } = useChatSession(credentials, phone)
+export function ChatScreen({ credentials }: ChatScreenProps) {
+  const { phone } = useParams<{ phone: string }>()
+  const navigate = useNavigate()
   const [draft, setDraft] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // phone is only ever empty if this route rendered without matching
+  // "/chat/:phone", which the route config already excludes — a
+  // defensive fallback, not an expected path.
+  const { messages, connectionError, sendText } = useChatSession(credentials, phone ?? '')
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  if (!phone) {
+    return <Navigate to="/new-chat" replace />
+  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -30,7 +39,12 @@ export function ChatScreen({ credentials, phone, onBack }: ChatScreenProps) {
   return (
     <div className="chat-screen">
       <header className="chat-header">
-        <button type="button" className="chat-back" onClick={onBack} aria-label="Назад">
+        <button
+          type="button"
+          className="chat-back"
+          onClick={() => navigate('/new-chat')}
+          aria-label="Назад"
+        >
           ←
         </button>
         <div className="chat-header-info">

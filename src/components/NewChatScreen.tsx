@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useNavigate } from 'react-router'
 import { normalizePhoneDigits } from '../api/greenApi'
 import './NewChatScreen.css'
 
 interface NewChatScreenProps {
-  onStartChat: (phone: string) => void
   onChangeAccount: () => void
 }
 
-export function NewChatScreen({ onStartChat, onChangeAccount }: NewChatScreenProps) {
+export function NewChatScreen({ onChangeAccount }: NewChatScreenProps) {
+  const navigate = useNavigate()
   const [phone, setPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -20,7 +21,7 @@ export function NewChatScreen({ onStartChat, onChangeAccount }: NewChatScreenPro
       return
     }
     setError(null)
-    onStartChat(normalized)
+    navigate(`/chat/${normalized}`)
   }
 
   return (
