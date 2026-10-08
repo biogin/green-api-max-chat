@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractIncomingTextMessage, isValidPhoneDigits, normalizePhoneDigits } from './greenApi'
+import { extractIncomingTextMessage, isValidRussianPhone, normalizePhoneDigits } from './greenApi'
 
 // Real payload shape captured from a live, authorized MAX instance.
 // senderData.chatId is an opaque internal id, NOT "{phone}@c.us" — the
@@ -156,20 +156,20 @@ describe('normalizePhoneDigits', () => {
   })
 })
 
-describe('isValidPhoneDigits', () => {
-  it('rejects anything shorter than 10 digits', () => {
-    expect(isValidPhoneDigits('')).toBe(false)
-    expect(isValidPhoneDigits('123456789')).toBe(false)
+describe('isValidRussianPhone', () => {
+  it('accepts exactly 11 digits starting with 7', () => {
+    expect(isValidRussianPhone('79991234567')).toBe(true)
   })
 
-  it('accepts the E.164 range of 10-15 digits', () => {
-    expect(isValidPhoneDigits('1234567890')).toBe(true)
-    expect(isValidPhoneDigits('79991234567')).toBe(true)
-    expect(isValidPhoneDigits('123456789012345')).toBe(true)
+  it('rejects anything shorter or longer than 11 digits', () => {
+    expect(isValidRussianPhone('')).toBe(false)
+    expect(isValidRussianPhone('7999123456')).toBe(false) // 10 — one short
+    expect(isValidRussianPhone('799912345678')).toBe(false) // 12 — the reported bug case
+    expect(isValidRussianPhone('7'.repeat(50))).toBe(false)
   })
 
-  it('rejects anything longer than 15 digits', () => {
-    expect(isValidPhoneDigits('1234567890123456')).toBe(false)
-    expect(isValidPhoneDigits('7'.repeat(50))).toBe(false)
+  it('rejects 11 digits that start with anything other than 7', () => {
+    expect(isValidRussianPhone('89991234567')).toBe(false) // pre-normalization 8-prefix
+    expect(isValidRussianPhone('14155550132')).toBe(false) // a real US number, 11 digits
   })
 })

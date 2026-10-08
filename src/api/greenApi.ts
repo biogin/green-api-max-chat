@@ -40,14 +40,14 @@ export function normalizePhoneDigits(phone: string): string {
   return digitsOnly
 }
 
-// E.164 bounds: a national number is at most 15 digits total. The lower
-// bound is a loose sanity check (shortest real international numbers run
-// ~8 digits), not a per-country rule.
-const MIN_PHONE_DIGITS = 10
-const MAX_PHONE_DIGITS = 15
+// MAX is a Russian-market messenger, and the app only targets Russian
+// numbers (PhoneInput's mask structurally can't produce anything else) —
+// so validation is exact, not a loose E.164 range: "7" + 10 subscriber
+// digits, 11 total, nothing more or less.
+const RUSSIAN_PHONE_DIGITS = 11
 
-export function isValidPhoneDigits(digits: string): boolean {
-  return digits.length >= MIN_PHONE_DIGITS && digits.length <= MAX_PHONE_DIGITS
+export function isValidRussianPhone(digits: string): boolean {
+  return digits.length === RUSSIAN_PHONE_DIGITS && digits.startsWith('7')
 }
 
 export function buildChatId(phone: string): string {

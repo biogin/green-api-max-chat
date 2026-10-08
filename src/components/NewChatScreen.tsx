@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { isValidPhoneDigits, normalizePhoneDigits } from '../api/greenApi'
+import { isValidRussianPhone } from '../api/greenApi'
 import { routes } from '../routes'
+import { PhoneInput } from './PhoneInput'
 import './NewChatScreen.css'
 
 interface NewChatScreenProps {
@@ -16,13 +17,12 @@ export function NewChatScreen({ onChangeAccount }: NewChatScreenProps) {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    const normalized = normalizePhoneDigits(phone)
-    if (!isValidPhoneDigits(normalized)) {
-      setError('Введите номер телефона в международном формате')
+    if (!isValidRussianPhone(phone)) {
+      setError('Введите номер телефона полностью')
       return
     }
     setError(null)
-    navigate(routes.chat(normalized))
+    navigate(routes.chat(phone))
   }
 
   return (
@@ -37,14 +37,7 @@ export function NewChatScreen({ onChangeAccount }: NewChatScreenProps) {
       <form className="new-chat-form" onSubmit={handleSubmit}>
         <label className="new-chat-field">
           <span>Номер телефона получателя</span>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+7 999 123-45-67"
-            autoComplete="off"
-            maxLength={30}
-          />
+          <PhoneInput value={phone} onChange={setPhone} />
         </label>
 
         {error && <p className="new-chat-error">{error}</p>}
