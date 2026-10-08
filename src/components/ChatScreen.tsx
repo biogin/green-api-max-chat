@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { useChatSession } from '../hooks/useChatSession'
 import type { GreenApiCredentials } from '../api/greenApi.types'
+import { routes } from '../routes'
 import { MessageBubble } from './MessageBubble'
 import './ChatScreen.css'
 
@@ -26,7 +27,7 @@ export function ChatScreen({ credentials }: ChatScreenProps) {
   }, [messages])
 
   if (!phone) {
-    return <Navigate to="/new-chat" replace />
+    return <Navigate to={routes.newChat} replace />
   }
 
   function handleSubmit(event: FormEvent) {
@@ -42,7 +43,7 @@ export function ChatScreen({ credentials }: ChatScreenProps) {
         <button
           type="button"
           className="chat-back"
-          onClick={() => navigate('/new-chat')}
+          onClick={() => navigate(routes.newChat)}
           aria-label="Назад"
         >
           ←

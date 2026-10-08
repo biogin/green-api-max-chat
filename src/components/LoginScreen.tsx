@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useActionState } from 'react'
 import { getStateInstance } from '../api/greenApi'
 import type { GreenApiCredentials } from '../api/greenApi.types'
 import './LoginScreen.css'
@@ -8,44 +7,43 @@ interface LoginScreenProps {
   onLoggedIn: (credentials: GreenApiCredentials) => void
 }
 
-export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
-  const [idInstance, setIdInstance] = useState('')
-  const [apiTokenInstance, setApiTokenInstance] = useState('')
-  const [isChecking, setIsChecking] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    setError(null)
-
-    const credentials: GreenApiCredentials = {
-      idInstance: idInstance.trim(),
-      apiTokenInstance: apiTokenInstance.trim(),
-    }
-
-    if (!credentials.idInstance || !credentials.apiTokenInstance) {
-      setError('Заполните оба поля')
-      return
-    }
-
-    setIsChecking(true)
-    try {
-      const { stateInstance } = await getStateInstance(credentials)
-      if (stateInstance !== 'authorized') {
-        setError(`Инстанс не авторизован (статус: ${stateInstance})`)
-        return
-      }
-      onLoggedIn(credentials)
-    } catch {
-      setError('Не удалось подключиться. Проверьте idInstance и apiTokenInstance')
-    } finally {
-      setIsChecking(false)
-    }
+async function submitLogin(
+  _previousError: string | null,
+  formData: FormData,
+  onLoggedIn: (credentials: GreenApiCredentials) => void,
+): Promise<string | null> {
+  const credentials: GreenApiCredentials = {
+    idInstance: String(formData.get('idInstance') ?? '').trim(),
+    apiTokenInstance: String(formData.get('apiTokenInstance') ?? '').trim(),
   }
+
+  if (!credentials.idInstance || !credentials.apiTokenInstance) {
+    return 'Заполните оба поля'
+  }
+
+  try {
+    const { stateInstance } = await getStateInstance(credentials)
+    if (stateInstance !== 'authorized') {
+      return `Инстанс не авторизован (статус: ${stateInstance})`
+    }
+  } catch {
+    return 'Не удалось подключиться. Проверьте idInstance и apiTokenInstance'
+  }
+
+  onLoggedIn(credentials)
+  return null
+}
+
+export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
+  const [error, submitAction, isChecking] = useActionState(
+    (previousError: string | null, formData: FormData) =>
+      submitLogin(previousError, formData, onLoggedIn),
+    null,
+  )
 
   return (
     <div className="login-screen">
-      <form className="login-card" onSubmit={handleSubmit}>
+      <form className="login-card" action={submitAction}>
         <h1 className="login-title">MAX Chat</h1>
         <p className="login-subtitle">Войдите с учётными данными GREEN-API</p>
 
@@ -53,8 +51,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
           <span>idInstance</span>
           <input
             type="text"
-            value={idInstance}
-            onChange={(e) => setIdInstance(e.target.value)}
+            name="idInstance"
             placeholder="1101000001"
             autoComplete="off"
             disabled={isChecking}
@@ -65,8 +62,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
           <span>apiTokenInstance</span>
           <input
             type="password"
-            value={apiTokenInstance}
-            onChange={(e) => setApiTokenInstance(e.target.value)}
+            name="apiTokenInstance"
             placeholder="d319...6f1a"
             autoComplete="off"
             disabled={isChecking}

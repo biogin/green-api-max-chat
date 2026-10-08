@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { normalizePhoneDigits } from '../api/greenApi'
+import { routes } from '../routes'
 import './NewChatScreen.css'
 
 interface NewChatScreenProps {
@@ -21,7 +22,7 @@ export function NewChatScreen({ onChangeAccount }: NewChatScreenProps) {
       return
     }
     setError(null)
-    navigate(`/chat/${normalized}`)
+    navigate(routes.chat(normalized))
   }
 
   return (
