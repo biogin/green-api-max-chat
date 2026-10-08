@@ -1,0 +1,76 @@
+.new-chat-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.new-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.new-chat-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.change-account {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.new-chat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.new-chat-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.new-chat-field input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: var(--text-primary);
+  font-size: 16px;
+  outline: none;
+}
+
+.new-chat-field input:focus {
+  border-color: var(--accent);
+}
+
+.new-chat-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.new-chat-submit {
+  background: var(--accent);
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
