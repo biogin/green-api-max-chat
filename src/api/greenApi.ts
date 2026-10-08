@@ -18,9 +18,22 @@ function instanceUrl(credentials: GreenApiCredentials, method: string): string {
   return `${API_BASE_URL}/waInstance${credentials.idInstance}/${method}/${credentials.apiTokenInstance}`
 }
 
-export function buildChatId(phone: string): string {
+/**
+ * Strips a phone number down to digits, normalizing the common Russian
+ * local-format leading "8" (e.g. "8 999 123-45-67") to the international
+ * "7" country code. Without this, local-format input builds a chatId for
+ * a number that doesn't exist and silently fails to deliver.
+ */
+export function normalizePhoneDigits(phone: string): string {
   const digitsOnly = phone.replace(/\D/g, '')
-  return `${digitsOnly}${CHAT_ID_SUFFIX}`
+  if (digitsOnly.length === 11 && digitsOnly.startsWith('8')) {
+    return `7${digitsOnly.slice(1)}`
+  }
+  return digitsOnly
+}
+
+export function buildChatId(phone: string): string {
+  return `${normalizePhoneDigits(phone)}${CHAT_ID_SUFFIX}`
 }
 
 export async function getStateInstance(

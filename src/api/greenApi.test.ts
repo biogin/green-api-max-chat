@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractIncomingTextMessage } from './greenApi'
+import { extractIncomingTextMessage, normalizePhoneDigits } from './greenApi'
 
 // Real payload shape captured from a live, authorized MAX instance.
 // senderData.chatId is an opaque internal id, NOT "{phone}@c.us" — the
@@ -64,5 +64,19 @@ describe('extractIncomingTextMessage', () => {
     expect(extractIncomingTextMessage(undefined)).toBeNull()
     expect(extractIncomingTextMessage('not an object')).toBeNull()
     expect(extractIncomingTextMessage({ typeWebhook: 'incomingMessageReceived' })).toBeNull()
+  })
+})
+
+describe('normalizePhoneDigits', () => {
+  it('strips formatting from an already-international number', () => {
+    expect(normalizePhoneDigits('+7 999 123-45-67')).toBe('79991234567')
+  })
+
+  it('converts the Russian local-format leading 8 to the 7 country code', () => {
+    expect(normalizePhoneDigits('8 999 123-45-67')).toBe('79991234567')
+  })
+
+  it('leaves non-Russian numbers alone', () => {
+    expect(normalizePhoneDigits('+1 415 555 0132')).toBe('14155550132')
   })
 })

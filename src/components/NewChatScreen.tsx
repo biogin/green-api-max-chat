@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { normalizePhoneDigits } from '../api/greenApi'
 import './NewChatScreen.css'
 
 interface NewChatScreenProps {
@@ -13,13 +14,13 @@ export function NewChatScreen({ onStartChat, onChangeAccount }: NewChatScreenPro
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    const digitsOnly = phone.replace(/\D/g, '')
-    if (digitsOnly.length < 10) {
+    const normalized = normalizePhoneDigits(phone)
+    if (normalized.length < 10) {
       setError('Введите номер телефона в международном формате')
       return
     }
     setError(null)
-    onStartChat(digitsOnly)
+    onStartChat(normalized)
   }
 
   return (

@@ -70,7 +70,7 @@
   border-radius: 20px;
   padding: 12px 16px;
   color: var(--text-primary);
-  font-size: 15px;
+  font-size: 16px; /* below 16px, iOS Safari auto-zooms the viewport on focus */
   outline: none;
 }
 

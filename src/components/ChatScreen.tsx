@@ -39,7 +39,7 @@ export function ChatScreen({ credentials, phone, onBack }: ChatScreenProps) {
         </div>
       </header>
 
-      <div className="chat-messages">
+      <div className="chat-messages" aria-live="polite">
         {messages.length === 0 && (
           <p className="chat-empty">Сообщений пока нет. Напишите первым!</p>
         )}
@@ -57,7 +57,12 @@ export function ChatScreen({ credentials, phone, onBack }: ChatScreenProps) {
           placeholder="Сообщение"
           autoComplete="off"
         />
-        <button type="submit" className="chat-send" disabled={!draft.trim()}>
+        <button
+          type="submit"
+          className="chat-send"
+          disabled={!draft.trim()}
+          aria-label="Отправить"
+        >
           ➤
         </button>
       </form>
