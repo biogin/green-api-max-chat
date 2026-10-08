@@ -17,8 +17,21 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         <span className="message-text">{message.text}</span>
         <span className="message-meta">
           {formatTime(message.timestamp)}
-          {message.status === 'sending' && ' · отправка…'}
-          {message.status === 'failed' && ' · ошибка'}
+          {message.status === 'sending' && (
+            <span className="message-status" aria-label="отправка">
+              ⏳
+            </span>
+          )}
+          {message.status === 'sent' && (
+            <span className="message-status" aria-label="отправлено">
+              ✓
+            </span>
+          )}
+          {message.status === 'failed' && (
+            <span className="message-status message-status--failed" aria-label="ошибка отправки">
+              !
+            </span>
+          )}
         </span>
       </div>
     </div>
