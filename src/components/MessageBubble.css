@@ -1,6 +1,6 @@
 .message-row {
   display: flex;
-  margin: 4px 0;
+  margin: var(--space-1) 0;
 }
 
 .message-row--out {
@@ -13,27 +13,27 @@
 
 .message-bubble {
   max-width: 75%;
-  padding: 10px 14px;
-  border-radius: 18px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .message-bubble--out {
   background: var(--accent-gradient);
   color: #fff;
-  border-bottom-right-radius: 4px;
+  border-bottom-right-radius: var(--radius-sm);
 }
 
 .message-bubble--in {
   background: var(--surface);
   color: var(--text-primary);
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: var(--radius-sm);
 }
 
 .message-text {
-  font-size: 15px;
+  font-size: var(--font-md);
   line-height: 1.35;
   white-space: pre-wrap;
   word-break: break-word;
@@ -41,19 +41,19 @@
 }
 
 .message-meta {
-  font-size: 11px;
+  font-size: var(--font-xs);
   opacity: 0.7;
   align-self: flex-end;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--space-1);
 }
 
 .message-status {
   display: inline-block;
-  width: 11px;
+  width: var(--font-xs);
   text-align: center;
-  font-size: 10px;
+  font-size: var(--font-2xs);
 }
 
 .message-status--failed {
