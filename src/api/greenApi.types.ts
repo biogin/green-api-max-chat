@@ -17,6 +17,8 @@ export interface ReceiveNotificationResponse {
 }
 
 export interface IncomingTextMessage {
+  /** Opaque internal MAX chat id (e.g. "468995439") — required by ReadChat, NOT "{phone}@c.us". */
+  chatId: string
   senderPhoneNumber: string
   text: string
   timestamp: number

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { buildChatId, pollForMessages, sendMessage } from '../api/greenApi'
-import type { ChatMessage, GreenApiCredentials } from '../api/greenApi.types'
+import { useChatSession } from '../hooks/useChatSession'
+import type { GreenApiCredentials } from '../api/greenApi.types'
 import { MessageBubble } from './MessageBubble'
 import './ChatScreen.css'
 
@@ -12,55 +12,19 @@ interface ChatScreenProps {
 }
 
 export function ChatScreen({ credentials, phone, onBack }: ChatScreenProps) {
-  const chatId = buildChatId(phone)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const { messages, connectionError, sendText } = useChatSession(credentials, phone)
   const [draft, setDraft] = useState('')
-  const [connectionError, setConnectionError] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    pollForMessages({
-      credentials,
-      phone,
-      signal: controller.signal,
-      onIncomingText: (text, timestamp) => {
-        setConnectionError(false)
-        setMessages((prev) => [
-          ...prev,
-          { id: crypto.randomUUID(), direction: 'incoming', text, timestamp },
-        ])
-      },
-      onError: () => setConnectionError(true),
-    })
-
-    return () => controller.abort()
-  }, [credentials, phone])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function handleSubmit(event: FormEvent) {
+  function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    const text = draft.trim()
-    if (!text) return
-
-    const id = crypto.randomUUID()
-    const timestamp = Math.floor(Date.now() / 1000)
-    setMessages((prev) => [
-      ...prev,
-      { id, direction: 'outgoing', text, timestamp, status: 'sending' },
-    ])
+    if (!draft.trim()) return
+    sendText(draft)
     setDraft('')
-
-    try {
-      await sendMessage(credentials, chatId, text)
-      setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, status: 'sent' } : m)))
-    } catch {
-      setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, status: 'failed' } : m)))
-    }
   }
 
   return (

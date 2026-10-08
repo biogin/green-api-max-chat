@@ -49,6 +49,17 @@ export async function sendMessage(
   return response.json()
 }
 
+export async function readChat(credentials: GreenApiCredentials, chatId: string): Promise<void> {
+  const response = await fetch(instanceUrl(credentials, 'readChat'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chatId }),
+  })
+  if (!response.ok) {
+    throw new Error(`readChat failed: ${response.status}`)
+  }
+}
+
 async function receiveNotification(
   credentials: GreenApiCredentials,
   receiveTimeoutSeconds: number,
@@ -84,6 +95,8 @@ async function deleteNotification(
  * NOT "{phone}@c.us" like the outgoing chatId format — confirmed against a
  * live instance. The actual phone number lives in senderData.senderPhoneNumber
  * (sent as a JSON number), so that's what incoming messages are matched on.
+ * The opaque chatId is still needed (and returned) because ReadChat requires
+ * it too — "{phone}@c.us" silently no-ops there (setRead: false).
  */
 export function extractIncomingTextMessage(body: unknown): IncomingTextMessage | null {
   if (typeof body !== 'object' || body === null) return null
@@ -97,26 +110,29 @@ export function extractIncomingTextMessage(body: unknown): IncomingTextMessage |
   const senderData = webhook.senderData as Record<string, unknown> | undefined
 
   const text = textMessageData?.textMessage
+  const chatId = senderData?.chatId
   const rawPhone = senderData?.senderPhoneNumber
   const senderPhoneNumber = typeof rawPhone === 'number' ? String(rawPhone) : rawPhone
   const timestamp = webhook.timestamp
 
   if (
     typeof text !== 'string' ||
+    typeof chatId !== 'string' ||
     typeof senderPhoneNumber !== 'string' ||
     typeof timestamp !== 'number'
   ) {
     return null
   }
 
-  return { senderPhoneNumber, text, timestamp }
+  return { chatId, senderPhoneNumber, text, timestamp }
 }
 
 export interface PollOptions {
   credentials: GreenApiCredentials
   /** Recipient phone number, digits only, matched against incoming senderPhoneNumber. */
   phone: string
-  onIncomingText: (text: string, timestamp: number) => void
+  /** chatId is the opaque internal id — pass straight to readChat, not buildChatId. */
+  onIncomingText: (text: string, timestamp: number, chatId: string) => void
   onError?: (error: unknown) => void
   signal: AbortSignal
 }
@@ -141,7 +157,7 @@ export async function pollForMessages({
       if (notification) {
         const incoming = extractIncomingTextMessage(notification.body)
         if (incoming && incoming.senderPhoneNumber === phone) {
-          onIncomingText(incoming.text, incoming.timestamp)
+          onIncomingText(incoming.text, incoming.timestamp, incoming.chatId)
         }
         await deleteNotification(credentials, notification.receiptId)
       }
