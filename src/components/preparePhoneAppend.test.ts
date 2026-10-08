@@ -5,6 +5,18 @@ const empty = { unmaskedValue: '' }
 const midEdit = { unmaskedValue: '999' }
 
 describe('preparePhoneAppend', () => {
+  // Regression: an earlier version rejected anything that wasn't exactly
+  // 10-11 digits, including a single typed character — which, since a
+  // keystroke is never 10-11 digits, rejected the very first character
+  // into an empty field and therefore bricked typing entirely (nothing
+  // ever got accepted, so the field stayed empty, so every subsequent
+  // keystroke hit the same rejection). This must always pass through.
+  it('passes single-keystroke typing through even on an empty field', () => {
+    expect(preparePhoneAppend('9', empty)).toBe('9')
+    expect(preparePhoneAppend('+', empty)).toBe('+')
+    expect(preparePhoneAppend('7', empty)).toBe('7')
+  })
+
   it('passes a bare 10-digit subscriber number through unchanged', () => {
     expect(preparePhoneAppend('9991234567', empty)).toBe('9991234567')
   })
