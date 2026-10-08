@@ -17,7 +17,7 @@ export interface ReceiveNotificationResponse {
 }
 
 export interface IncomingTextMessage {
-  chatId: string
+  senderPhoneNumber: string
   text: string
   timestamp: number
 }

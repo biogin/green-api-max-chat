@@ -79,6 +79,11 @@ async function deleteNotification(
  * or returns null for every other notification shape (status updates,
  * non-text messages, etc). The exact payload shape isn't fully confirmed
  * against GREEN-API's public docs, so this never trusts the shape blindly.
+ *
+ * Note: senderData.chatId is an opaque internal MAX id (e.g. "468995439"),
+ * NOT "{phone}@c.us" like the outgoing chatId format — confirmed against a
+ * live instance. The actual phone number lives in senderData.senderPhoneNumber
+ * (sent as a JSON number), so that's what incoming messages are matched on.
  */
 export function extractIncomingTextMessage(body: unknown): IncomingTextMessage | null {
   if (typeof body !== 'object' || body === null) return null
@@ -92,19 +97,25 @@ export function extractIncomingTextMessage(body: unknown): IncomingTextMessage |
   const senderData = webhook.senderData as Record<string, unknown> | undefined
 
   const text = textMessageData?.textMessage
-  const chatId = senderData?.chatId
+  const rawPhone = senderData?.senderPhoneNumber
+  const senderPhoneNumber = typeof rawPhone === 'number' ? String(rawPhone) : rawPhone
   const timestamp = webhook.timestamp
 
-  if (typeof text !== 'string' || typeof chatId !== 'string' || typeof timestamp !== 'number') {
+  if (
+    typeof text !== 'string' ||
+    typeof senderPhoneNumber !== 'string' ||
+    typeof timestamp !== 'number'
+  ) {
     return null
   }
 
-  return { chatId, text, timestamp }
+  return { senderPhoneNumber, text, timestamp }
 }
 
 export interface PollOptions {
   credentials: GreenApiCredentials
-  chatId: string
+  /** Recipient phone number, digits only, matched against incoming senderPhoneNumber. */
+  phone: string
   onIncomingText: (text: string, timestamp: number) => void
   onError?: (error: unknown) => void
   signal: AbortSignal
@@ -112,12 +123,12 @@ export interface PollOptions {
 
 /**
  * Long-polls GREEN-API's notification queue and forwards text messages
- * from the given chat. Every notification is deleted after being read,
+ * from the given sender. Every notification is deleted after being read,
  * regardless of type, so the queue doesn't back up with status updates.
  */
 export async function pollForMessages({
   credentials,
-  chatId,
+  phone,
   onIncomingText,
   onError,
   signal,
@@ -129,7 +140,7 @@ export async function pollForMessages({
 
       if (notification) {
         const incoming = extractIncomingTextMessage(notification.body)
-        if (incoming && incoming.chatId === chatId) {
+        if (incoming && incoming.senderPhoneNumber === phone) {
           onIncomingText(incoming.text, incoming.timestamp)
         }
         await deleteNotification(credentials, notification.receiptId)

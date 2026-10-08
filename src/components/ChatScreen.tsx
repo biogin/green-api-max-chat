@@ -23,7 +23,7 @@ export function ChatScreen({ credentials, phone, onBack }: ChatScreenProps) {
 
     pollForMessages({
       credentials,
-      chatId,
+      phone,
       signal: controller.signal,
       onIncomingText: (text, timestamp) => {
         setConnectionError(false)
@@ -36,7 +36,7 @@ export function ChatScreen({ credentials, phone, onBack }: ChatScreenProps) {
     })
 
     return () => controller.abort()
-  }, [credentials, chatId])
+  }, [credentials, phone])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
