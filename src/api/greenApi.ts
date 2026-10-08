@@ -8,6 +8,9 @@ import type {
 
 const API_BASE_URL = 'https://api.green-api.com'
 
+/** SendMessage's documented limit; enforced client-side via the input's maxLength. */
+export const MAX_MESSAGE_LENGTH = 4000
+
 // GREEN-API's public docs only confirm the "@c.us" chatId suffix for
 // WhatsApp personal chats. The MAX-specific suffix wasn't documented at
 // the time this was written — verify against a live MAX instance and
@@ -15,7 +18,12 @@ const API_BASE_URL = 'https://api.green-api.com'
 const CHAT_ID_SUFFIX = '@c.us'
 
 function instanceUrl(credentials: GreenApiCredentials, method: string): string {
-  return `${API_BASE_URL}/waInstance${credentials.idInstance}/${method}/${credentials.apiTokenInstance}`
+  // Credentials are user-typed and land directly in the URL path — encode
+  // them so a stray "/" (or anything else) can't reshape the request to a
+  // different method/path than the one intended.
+  const idInstance = encodeURIComponent(credentials.idInstance)
+  const apiTokenInstance = encodeURIComponent(credentials.apiTokenInstance)
+  return `${API_BASE_URL}/waInstance${idInstance}/${method}/${apiTokenInstance}`
 }
 
 /**
@@ -30,6 +38,16 @@ export function normalizePhoneDigits(phone: string): string {
     return `7${digitsOnly.slice(1)}`
   }
   return digitsOnly
+}
+
+// E.164 bounds: a national number is at most 15 digits total. The lower
+// bound is a loose sanity check (shortest real international numbers run
+// ~8 digits), not a per-country rule.
+const MIN_PHONE_DIGITS = 10
+const MAX_PHONE_DIGITS = 15
+
+export function isValidPhoneDigits(digits: string): boolean {
+  return digits.length >= MIN_PHONE_DIGITS && digits.length <= MAX_PHONE_DIGITS
 }
 
 export function buildChatId(phone: string): string {

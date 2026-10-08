@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
+import { MAX_MESSAGE_LENGTH } from '../api/greenApi'
 import { useChatSession } from '../hooks/useChatSession'
 import type { GreenApiCredentials } from '../api/greenApi.types'
 import { routes } from '../routes'
@@ -71,6 +72,7 @@ export function ChatScreen({ credentials }: ChatScreenProps) {
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Сообщение"
           autoComplete="off"
+          maxLength={MAX_MESSAGE_LENGTH}
         />
         <button
           type="submit"

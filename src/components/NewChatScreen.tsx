@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { normalizePhoneDigits } from '../api/greenApi'
+import { isValidPhoneDigits, normalizePhoneDigits } from '../api/greenApi'
 import { routes } from '../routes'
 import './NewChatScreen.css'
 
@@ -17,7 +17,7 @@ export function NewChatScreen({ onChangeAccount }: NewChatScreenProps) {
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     const normalized = normalizePhoneDigits(phone)
-    if (normalized.length < 10) {
+    if (!isValidPhoneDigits(normalized)) {
       setError('Введите номер телефона в международном формате')
       return
     }
@@ -43,6 +43,7 @@ export function NewChatScreen({ onChangeAccount }: NewChatScreenProps) {
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+7 999 123-45-67"
             autoComplete="off"
+            maxLength={30}
           />
         </label>
 

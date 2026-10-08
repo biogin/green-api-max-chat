@@ -55,6 +55,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             placeholder="1101000001"
             autoComplete="off"
             disabled={isChecking}
+            maxLength={50}
           />
         </label>
 
@@ -66,6 +67,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             placeholder="d319...6f1a"
             autoComplete="off"
             disabled={isChecking}
+            maxLength={200}
           />
         </label>
 
