@@ -1,32 +1,41 @@
-# React + TypeScript + Vite
+# MAX Chat — GREEN-API
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Тестовое задание «Фронтенд разработчик React»: минимальный веб-интерфейс для отправки и получения текстовых сообщений в MAX через [GREEN-API](https://green-api.com/max).
 
-Currently, two official plugins are available:
+## Как это работает
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. **Вход** — пользователь вводит `idInstance` и `apiTokenInstance` своего инстанса GREEN-API. Перед входом данные проверяются вызовом `GetStateInstance`; при успехе сохраняются в `localStorage` браузера.
+2. **Новый чат** — пользователь вводит номер телефона получателя (в международном формате).
+3. **Чат** — отправка сообщений через метод [`SendMessage`](https://green-api.com/v3/docs/api/sending/SendMessage/); входящие сообщения получаются long-polling'ом через `ReceiveNotification`/`DeleteNotification` ([HTTP API receiving technology](https://green-api.com/v3/docs/api/receiving/technology-http-api/)).
 
-## React Compiler
+Интерфейс рассчитан на один активный чат за раз — без списка чатов, без истории между перезагрузками страницы (осознанное упрощение, т.к. задание просит «максимально простой интерфейс с минимальным набором функций»).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Предварительные требования
 
-## Expanding the Oxlint configuration
+- Node.js 20+
+- Готовый инстанс GREEN-API с типом MAX, **авторизованный** (к инстансу должен быть привязан реальный MAX-аккаунт — сканированием QR-кода из приложения MAX, аналогично привязке WhatsApp Web). Неавторизованный инстанс принимает вызовы `SendMessage` (возвращает `200 OK`), но сообщения никуда не доставляются и входящие уведомления не приходят.
+- В настройках инстанса (`SetSettings`) должны быть включены `incomingWebhook`, `outgoingMessageWebhook`, `outgoingAPIMessageWebhook`, `stateWebhook` (значение `"yes"`) — иначе уведомления не попадают в очередь `ReceiveNotification`. Это можно сделать прямо из консоли GREEN-API (my.green-api.com) или одним вызовом `SetSettings`.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Запуск локально
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Откройте `http://localhost:5173`, введите свои `idInstance`/`apiTokenInstance`, затем номер телефона получателя.
+
+## Сборка
+
+```bash
+npm run build   # type-check + production build в dist/
+npm run preview # локальный просмотр собранной версии
+npm run lint    # oxlint
+```
+
+## Известные ограничения и технические заметки
+
+- **Хранение**: сообщения существуют только в памяти вкладки и теряются при перезагрузке страницы. Учётные данные GREEN-API сохраняются в `localStorage` (кнопка «Сменить аккаунт» их очищает).
+- **chatId для MAX**: при отправке используется формат `{телефон}@c.us` (как в WhatsApp) — подтверждено рабочим на реальном авторизованном инстансе. Во входящих уведомлениях `senderData.chatId`, напротив, представляет собой непрозрачный внутренний ID MAX (например, `"468995439"`), а не `{телефон}@c.us` — поэтому сопоставление входящих сообщений с текущим чатом идёт по полю `senderData.senderPhoneNumber`, а не по `chatId`. Это расхождение не задокументировано в публичных доках GREEN-API и было обнаружено эмпирически.
+- **CORS**: прямые запросы из браузера к `api.green-api.com` работают без прокси — проверено вживую.
+- Автоматических тестов нет (сознательный компромисс ради срока в 5 дней); основная логика работы с API вынесена в `src/api/greenApi.ts` в чистые, тестируемые функции.
